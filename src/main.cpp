@@ -1,4 +1,4 @@
-/* Copyright 2013-2016 Sathya Laufer
+/* Copyright 2013-2017 Sathya Laufer
  *
  * libhomegear-base is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License as
@@ -32,7 +32,7 @@
 #include <memory>
 #include "homegear-base/BaseLib.h"
 
-std::shared_ptr<BaseLib::Obj> _bl;
+std::shared_ptr<BaseLib::SharedObjects> _bl;
 std::string _workingDirectory;
 std::string _executablePath;
 
@@ -189,14 +189,14 @@ void testBinaryRpc()
 		if(bytesProcessed != 19 || !binaryRpc.isFinished() || binaryRpc.getData() != binaryRpcBuffer2) std::cerr << "Binary RPC test failed (10)." << std::endl;
 	}
 
-	std::cout << "Finished testing class BinaryRpc..." << std::endl << std::endl;
+	std::cout << "Finished testing class BinaryRpc." << std::endl << std::endl;
 }
 
 void testJson()
 {
 	std::cout << "Testing JSON en-/decoding..." << std::endl;
 	std::string jsonInput("{\"on\":true, \"off\":    false, \"bla\":null, \"blupp\":  [5.643,false , null ,true ],\"blupp2\":[ 5.643,false,null,true], \"sät\":255.63456, \"bri\":-255,\"hue\":10000, \"bli\":{\"a\": 2,\"b\":false}    ,     \"e\"  :   -34785326,\"f\":-0.547887237, \"g\":{},\"h\":[], \"i\" : {    }  , \"j\" : [    ] , \"k\": {} , \"l\": [] }");
-	BaseLib::RPC::JsonDecoder jsonDecoder(_bl.get());
+	BaseLib::Rpc::JsonDecoder jsonDecoder(_bl.get());
 	BaseLib::PVariable variable = jsonDecoder.decode(jsonInput);
 	if(variable->type != BaseLib::VariableType::tStruct)
 	{
@@ -310,22 +310,354 @@ void testJson()
 		}
 	}
 
-	BaseLib::RPC::JsonEncoder jsonEncoder(_bl.get());
+	BaseLib::Rpc::JsonEncoder jsonEncoder(_bl.get());
 	std::string jsonOutput;
 	jsonEncoder.encode(variable, jsonOutput);
 	if(jsonOutput != "{\"bla\":null,\"bli\":{\"a\":2,\"b\":false},\"blupp\":[5.643000000000000,false,null,true],\"blupp2\":[5.643000000000000,false,null,true],\"bri\":-255,\"e\":-34785326,\"f\":-0.547887237000000,\"g\":{},\"h\":[],\"hue\":10000,\"i\":{},\"j\":[],\"k\":{},\"l\":[],\"off\":false,\"on\":true,\"sät\":255.634559999999993}")
 	{
 		std::cerr << "JSON encoding test failed." << std::endl;
 	}
-	std::cout << "Finished testing JSON en-/decoding..." << std::endl << std::endl;
+	std::cout << "Finished testing JSON en-/decoding." << std::endl << std::endl;
+}
+
+void testAnsiConversion()
+{
+	std::cout << "Testing ANSI to UTF-8 and UTF-8 to ANSI conversion..." << std::endl;
+	BaseLib::Ansi ansi(true, true);
+	std::vector<uint8_t> utf8;
+
+	//äüößÄÖÜ
+	utf8 = std::vector<uint8_t>{ 0xC3, 0xA4, 0xC3, 0xBC, 0xC3, 0xB6, 0xC3, 0x9F, 0xC3, 0x84, 0xC3, 0x96, 0xC3, 0x9C };
+	std::string result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+	if(BaseLib::HelperFunctions::getHexString(result) != "E4FCF6DFC4D6DC") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+	result = ansi.toUtf8(result);
+	if(BaseLib::HelperFunctions::getHexString(result) != "C3A4C3BCC3B6C39FC384C396C39C") std::cerr << "Conversion from Ansi back to UTF-8 failed: Result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+	//{{{ Boundary condition test cases
+		//{{{ First possible sequence of a certain length
+			utf8 = std::vector<uint8_t>{ 0 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xC2, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xE0, 0xA0, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xF0, 0x90, 0x80, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xF8, 0x88, 0x80, 0x80, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xFC, 0x84, 0x80, 0x80, 0x80, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+		//}}}
+
+		//{{{ Last possible sequence of a certain length
+			utf8 = std::vector<uint8_t>{ 0x7F };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(BaseLib::HelperFunctions::getHexString(result) != "7F") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xDF, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xEF, 0xBF, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xF7, 0xBF, 0xBF, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xFB, 0xBF, 0xBF, 0xBF, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xFD, 0xBF, 0xBF, 0xBF, 0xBF, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+		//}}}
+
+		//{{{ Other boundary conditions
+			utf8 = std::vector<uint8_t>{ 0xED, 0x9F, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xEE, 0x80, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xEF, 0xBF, 0xBD };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xF4, 0x8F, 0xBF, 0xBF };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+			utf8 = std::vector<uint8_t>{ 0xF4, 0x90, 0x80, 0x80 };
+			result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+			if(result != "?") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+		//}}}
+
+		//{{{ Malformed sequences
+			//{{{ Unexpected continuation bytes
+				utf8 = std::vector<uint8_t>{ 0x80 };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0xBF };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0x80, 0xBF };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0x80, 0xBF, 0x80 };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0x80, 0xBF, 0x80, 0xBF };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0x80, 0xBF, 0x80, 0xBF, 0x80 };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0x80, 0xBF, 0x80, 0xBF, 0x80, 0xBF };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+
+				utf8 = std::vector<uint8_t>{ 0x80, 0xBF, 0x80, 0xBF, 0x80, 0xBF, 0x80 };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(!result.empty()) std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+			//}}}
+
+			//{{{ Loneley start characters
+				utf8 = std::vector<uint8_t>{ 0xC0, 0x20, 0xC1, 0x20, 0xC2, 0x20, 0xC3, 0x20, 0xC4, 0x20, 0xC5, 0x20, 0xC6, 0x20, 0xC7, 0x20, 0xC8, 0x20, 0xC9, 0x20, 0xCA, 0x20, 0xCB, 0x20, 0xCC, 0x20, 0xCD, 0x20, 0xCE, 0x20, 0xCF, 0x20, 0xD0, 0x20, 0xD1, 0x20, 0xD2, 0x20, 0xD3, 0x20, 0xD4, 0x20, 0xD5, 0x20, 0xD6, 0x20, 0xD7, 0x20, 0xD8, 0x20, 0xD9, 0x20, 0xDA, 0x20, 0xDB, 0x20, 0xDC, 0x20, 0xDD, 0x20, 0xDE, 0x20, 0xDF, 0x20 };
+				result = ansi.toAnsi((char*)&utf8[0], utf8.size());
+				if(result != "????????????????????????????????") std::cerr << "Conversion from UTF-8 to Ansi failed: Value: " << BaseLib::HelperFunctions::getHexString(utf8) << ", result: " << BaseLib::HelperFunctions::getHexString(result) << std::endl;
+			//}}}
+		//}}}
+	//}}}
+	std::cout << "Finished testing UTF-8 to ANSI and ANSI to UTF-8 conversion." << std::endl << std::endl;
+}
+
+void testBitReaderWriter()
+{
+	std::cout << "Testing BitReaderWriter..." << std::endl;
+	std::vector<uint8_t> data = { 0xAB, 0xC5, 0xD3, 0xB6, 0xD4, 0x5A, 0x73, 0x35 };
+	std::vector<char> signedData = { (char)(uint8_t)0xAB, (char)(uint8_t)0xC5, (char)(uint8_t)0xD3, (char)(uint8_t)0xB6, (char)(uint8_t)0xD4, 0x5A, 0x73, 0x35 };
+	uint64_t intData = 0xABC5D3B6D45A7335ll;
+	uint64_t intDataReverse = 0x35735AD4B6D3C5ABll;
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; j <= 64; j++) // j represents length
+		{
+			int32_t rightShiftCount = 64 - j - i;
+			uint64_t resultData = rightShiftCount >= 0 ? ((intData << i) >> i) >> rightShiftCount : ((intData << i) >> i) << (rightShiftCount * -1);
+			std::vector<uint8_t> expectedResult((j / 8) + (j % 8 != 0 ? 1 : 0), 0);
+			for(uint32_t k = 0; k < expectedResult.size(); k++)
+			{
+				expectedResult.at(k) = resultData >> ((expectedResult.size() - k - 1) * 8);
+			}
+			std::vector<uint8_t> result = BaseLib::BitReaderWriter::getPosition(data, i, j);
+			if(result.size() != expectedResult.size() || !std::equal(result.begin(), result.end(), expectedResult.begin()))
+			{
+				std::cerr << "Error reading " << j << " bits from index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(result) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedResult) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; j <= 64; j++) // j represents length
+		{
+			int32_t rightShiftCount = 64 - j - i;
+			uint64_t resultData = rightShiftCount >= 0 ? ((intData << i) >> i) >> rightShiftCount : ((intData << i) >> i) << (rightShiftCount * -1);
+			std::vector<uint8_t> expectedResult((j / 8) + (j % 8 != 0 ? 1 : 0), 0);
+			for(uint32_t k = 0; k < expectedResult.size(); k++)
+			{
+				expectedResult.at(k) = resultData >> ((expectedResult.size() - k - 1) * 8);
+			}
+			std::vector<uint8_t> result = BaseLib::BitReaderWriter::getPosition(signedData, i, j);
+			if(result.size() != expectedResult.size() || !std::equal(result.begin(), result.end(), expectedResult.begin()))
+			{
+				std::cerr << "Error reading " << j << " bits from index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(result) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedResult) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; j <= 8; j++) // j represents length
+		{
+			int32_t rightShiftCount = 64 - j - i;
+			uint64_t resultData = rightShiftCount >= 0 ? ((intData << i) >> i) >> rightShiftCount : ((intData << i) >> i) << (rightShiftCount * -1);
+			if(rightShiftCount == 64) resultData = 0;
+			uint8_t result = BaseLib::BitReaderWriter::getPosition8(data, i, j);
+			if(result != resultData)
+			{
+				std::cerr << "Error reading " << j << " bits from index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(result) << " but expected " << BaseLib::HelperFunctions::getHexString(resultData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; j <= 16; j++) // j represents length
+		{
+			int32_t rightShiftCount = 64 - j - i;
+			uint64_t resultData = rightShiftCount >= 0 ? ((intData << i) >> i) >> rightShiftCount : ((intData << i) >> i) << (rightShiftCount * -1);
+			if(rightShiftCount == 64) resultData = 0;
+			uint16_t result = BaseLib::BitReaderWriter::getPosition16(data, i, j);
+			if(result != resultData)
+			{
+				std::cerr << "Error reading " << j << " bits from index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(result) << " but expected " << BaseLib::HelperFunctions::getHexString(resultData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; j <= 32; j++) // j represents length
+		{
+			int32_t rightShiftCount = 64 - j - i;
+			uint64_t resultData = rightShiftCount >= 0 ? ((intData << i) >> i) >> rightShiftCount : ((intData << i) >> i) << (rightShiftCount * -1);
+			if(rightShiftCount == 64) resultData = 0;
+			uint32_t result = BaseLib::BitReaderWriter::getPosition32(data, i, j);
+			if(result != resultData)
+			{
+				std::cerr << "Error reading " << j << " bits from index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(result) << " but expected " << BaseLib::HelperFunctions::getHexString(resultData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; j <= 64; j++) // j represents length
+		{
+			int32_t rightShiftCount = 64 - j - i;
+			uint64_t resultData = rightShiftCount >= 0 ? ((intData << i) >> i) >> rightShiftCount : ((intData << i) >> i) << (rightShiftCount * -1);
+			if(rightShiftCount == 64) resultData = 0;
+			uint64_t result = BaseLib::BitReaderWriter::getPosition64(data, i, j);
+			if(result != resultData)
+			{
+				std::cerr << "Error reading " << j << " bits from index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(result) << " but expected " << BaseLib::HelperFunctions::getHexString(resultData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+		{
+			uint64_t resultData = intDataReverse << (64 - j) >> i;
+			for(uint32_t k = 0; k < i; k++)
+			{
+				resultData |= (uint64_t)1 << (64 - k - 1);
+			}
+			for(uint32_t k = i + j; k < 64; k++)
+			{
+				resultData |= (uint64_t)1 << (64 - k - 1);
+			}
+			std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56), (uint8_t)(resultData >> 48), (uint8_t)(resultData >> 40), (uint8_t)(resultData >> 32), (uint8_t)(resultData >> 24), (uint8_t)(resultData >> 16), (uint8_t)(resultData >> 8), (uint8_t)resultData };
+
+			std::vector<uint8_t> targetData(8, 0xFF);
+			BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+			if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+			{
+				std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+		{
+			uint64_t resultData = intDataReverse << (64 - j) >> i;
+			for(uint32_t k = i + j; k < 64; k++)
+			{
+				resultData &= ~((uint64_t)1 << (64 - k - 1));
+			}
+			std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56), (uint8_t)(resultData >> 48), (uint8_t)(resultData >> 40), (uint8_t)(resultData >> 32), (uint8_t)(resultData >> 24), (uint8_t)(resultData >> 16), (uint8_t)(resultData >> 8), (uint8_t)resultData };
+
+			std::vector<uint8_t> targetData(8, 0);
+			BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+			if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+			{
+				std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+		{
+			uint64_t resultData = intDataReverse << (64 - j) >> i;
+			for(uint32_t k = 0; k < i; k++)
+			{
+				resultData |= (uint64_t)1 << (64 - k - 1);
+			}
+			for(uint32_t k = i + j; k < 64; k++)
+			{
+				resultData |= (uint64_t)1 << (64 - k - 1);
+			}
+			std::vector<char> expectedData{ (char)(uint8_t)(resultData >> 56), (char)(uint8_t)(resultData >> 48), (char)(uint8_t)(resultData >> 40), (char)(uint8_t)(resultData >> 32), (char)(uint8_t)(resultData >> 24), (char)(uint8_t)(resultData >> 16), (char)(uint8_t)(resultData >> 8), (char)(uint8_t)resultData };
+
+			std::vector<char> targetData(8, (char)(uint8_t)0xFF);
+			BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+			if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+			{
+				std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+			}
+		}
+	}
+
+	for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+	{
+		for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+		{
+			uint64_t resultData = intDataReverse << (64 - j) >> i;
+			for(uint32_t k = i + j; k < 64; k++)
+			{
+				resultData &= ~((uint64_t)1 << (64 - k - 1));
+			}
+			std::vector<char> expectedData{ (char)(uint8_t)(resultData >> 56), (char)(uint8_t)(resultData >> 48), (char)(uint8_t)(resultData >> 40), (char)(uint8_t)(resultData >> 32), (char)(uint8_t)(resultData >> 24), (char)(uint8_t)(resultData >> 16), (char)(uint8_t)(resultData >> 8), (char)(uint8_t)resultData };
+
+			std::vector<char> targetData(8, 0);
+			BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+			if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+			{
+				std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+			}
+		}
+	}
+
+	std::cout << "Finished testing BitReaderWriter" << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-	_bl.reset(new BaseLib::Obj(_executablePath, nullptr, false));
+	_bl.reset(new BaseLib::SharedObjects(_executablePath, nullptr, false));
 
-	testJson();
-	testBinaryRpc();
+	//testJson();
+	//testBinaryRpc();
+	//testAnsiConversion();
+	testBitReaderWriter();
 
 	return 0;
 }

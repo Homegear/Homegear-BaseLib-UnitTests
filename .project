@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <projectDescription>
-	<name>libhomegear-base</name>
+	<name>homegear-baselib-unittests</name>
 	<comment></comment>
 	<projects>
 	</projects>
@@ -11,7 +11,7 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/org.eclipse.cdt.managedbuilder.core.genmakebuilder (7).launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/org.eclipse.cdt.managedbuilder.core.genmakebuilder (11).launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>
@@ -21,7 +21,7 @@
 			<arguments>
 				<dictionary>
 					<key>LaunchConfigHandle</key>
-					<value>&lt;project&gt;/.externalToolBuilders/libhomegear-base-unittests-builder.launch</value>
+					<value>&lt;project&gt;/.externalToolBuilders/homegear-baselib-unittests-builder.launch</value>
 				</dictionary>
 			</arguments>
 		</buildCommand>

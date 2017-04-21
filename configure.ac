@@ -2,7 +2,7 @@
 # Process this file with autoconf to produce a configure script.
 
 AC_PREREQ([2.69])
-AC_INIT(libhomegear-base-unittests, m4_esyscmd_s([./getVersion.sh]), sathya@laufers.net)
+AC_INIT(homegear-baselib-unittests, m4_esyscmd_s([./getVersion.sh]), sathya@laufers.net)
 AC_CONFIG_AUX_DIR(cfg)
 AM_INIT_AUTOMAKE
 AC_CONFIG_SRCDIR([src/main.cpp])
@@ -67,8 +67,5 @@ case $host_os in
 	AC_MSG_ERROR([Your platform is not currently supported])
         ;;
 esac
-
-AC_DEFINE_UNQUOTED([GITCOMMITSHABASE], [`./getGitCommitBase.sh`], [Define git commit SHA of libhomegear-base])
-AC_DEFINE_UNQUOTED([GITCOMMITSHAHOMEGEAR], [`./getGitCommitHomegear.sh`], [Define git commit SHA of Homegear])
 
 AC_OUTPUT(Makefile src/Makefile)
