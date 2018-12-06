@@ -647,17 +647,120 @@ void testBitReaderWriter()
 		}
 	}
 
-	std::cout << "Finished testing BitReaderWriter" << std::endl;
+	std::cout << "Finished testing BitReaderWriter." << std::endl << std::endl;
+}
+
+void testWebSocket()
+{
+	std::cout << "Testing WebSocket..." << std::endl;
+
+	{ //Process header in one byte blocks
+		std::vector<char> buffer{ 0x01, 126, 0, 0 };
+
+		BaseLib::WebSocket webSocket;
+		int32_t processedBytes = webSocket.process(buffer.data(), 1);
+		if(processedBytes != 1 || webSocket.isFinished())
+		{
+			std::cerr << "Error processing first WebSocket byte." << std::endl;
+		}
+
+		processedBytes = webSocket.process(buffer.data() + 1, 1);
+		if(processedBytes != 1 || webSocket.isFinished())
+		{
+			std::cerr << "Error processing second WebSocket byte." << std::endl;
+		}
+
+		processedBytes = webSocket.process(buffer.data() + 2, 1);
+		if(processedBytes != 1 || webSocket.isFinished())
+		{
+			std::cerr << "Error processing third WebSocket byte." << std::endl;
+		}
+
+		processedBytes = webSocket.process(buffer.data() + 3, 1);
+		if(processedBytes != 1)
+		{
+			std::cerr << "Error processing forth WebSocket byte." << std::endl;
+		}
+
+		if(!webSocket.isFinished())
+		{
+			std::cerr << "Error processing WebSocket header." << std::endl;
+		}
+	}
+
+	{ //Process first two header bytes and then continue in one byte blocks
+		std::vector<char> buffer{ 0x01, 126, 0, 0 };
+
+		BaseLib::WebSocket webSocket;
+		int32_t processedBytes = webSocket.process(buffer.data(), 2);
+		if(processedBytes != 2 || webSocket.isFinished())
+		{
+			std::cerr << "Error processing first two WebSocket bytes." << std::endl;
+		}
+
+		processedBytes = webSocket.process(buffer.data() + 2, 1);
+		if(processedBytes != 1 || webSocket.isFinished())
+		{
+			std::cerr << "Error processing third WebSocket byte." << std::endl;
+		}
+
+		processedBytes = webSocket.process(buffer.data() + 3, 1);
+		if(processedBytes != 1)
+		{
+			std::cerr << "Error processing forth WebSocket byte." << std::endl;
+		}
+
+		if(!webSocket.isFinished())
+		{
+			std::cerr << "Error processing WebSocket header." << std::endl;
+		}
+	}
+
+	{ //Process first two and then the second two header bytes
+		std::vector<char> buffer{ 0x01, 126, 0, 0 };
+
+		BaseLib::WebSocket webSocket;
+		int32_t processedBytes = webSocket.process(buffer.data(), 2);
+		if(processedBytes != 2 || webSocket.isFinished())
+		{
+			std::cerr << "Error processing first two WebSocket bytes." << std::endl;
+		}
+
+		processedBytes = webSocket.process(buffer.data() + 2, 2);
+		if(processedBytes != 2)
+		{
+			std::cerr << "Error processing third and forth WebSocket byte." << std::endl;
+		}
+
+		if(!webSocket.isFinished())
+		{
+			std::cerr << "Error processing WebSocket header." << std::endl;
+		}
+	}
+
+	{ //Process whole WebSocket header
+		std::vector<char> buffer{ 0x01, 126, 0, 0 };
+
+		BaseLib::WebSocket webSocket;
+		int32_t processedBytes = webSocket.process(buffer.data(), buffer.size());
+		if(processedBytes != 4 || !webSocket.isFinished())
+		{
+			std::cerr << "Error processing WebSocket header." << std::endl;
+		}
+	}
+
+	std::cout << "Finished testing WebSocket." << std::endl << std::endl;
 }
 
 int main(int argc, char* argv[])
 {
-	_bl.reset(new BaseLib::SharedObjects(_executablePath, nullptr, false));
+	_bl.reset(new BaseLib::SharedObjects(false));
 
-	//testJson();
-	//testBinaryRpc();
-	//testAnsiConversion();
+	testJson();
+	testBinaryRpc();
+	testAnsiConversion();
 	testBitReaderWriter();
+	testWebSocket();
 
 	return 0;
 }
