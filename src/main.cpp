@@ -749,6 +749,25 @@ void testWebSocket()
 		}
 	}
 
+    { //Process full packet
+        //"fin" bit, "opcode" => text, "has mask" bit, header size 6, payload size 43
+        std::vector<char> buffer = _bl->hf.getBinary("81AB29845A2952A62F5A4CF678130BB63B1B1CB1681A4CE06A4B11E6691E1AE63B1B1FBD391D4ABD6C4D1EBD6E1C1CA627");
+
+        BaseLib::WebSocket webSocket;
+        int32_t processedBytes = webSocket.process(buffer.data(), buffer.size());
+        if(processedBytes != 49 || !webSocket.isFinished())
+        {
+            std::cerr << "Error processing WebSocket packet." << std::endl;
+        }
+
+        webSocket.reset(); //Reprocess same packet
+        processedBytes = webSocket.process(buffer.data(), buffer.size());
+        if(processedBytes != 49 || !webSocket.isFinished())
+        {
+            std::cerr << "Error processing WebSocket packet (2)." << std::endl;
+        }
+    }
+
 	std::cout << "Finished testing WebSocket." << std::endl << std::endl;
 }
 
