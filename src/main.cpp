@@ -1,17 +1,17 @@
-/* Copyright 2013-2017 Sathya Laufer
+/* Copyright 2013-2019 Homegear GmbH
  *
- * libhomegear-base is free software: you can redistribute it and/or
+ * homegear-baselib-unittests is free software: you can redistribute it and/or
  * modify it under the terms of the GNU Lesser General Public License as
  * published by the Free Software Foundation, either version 3 of the
  * License, or (at your option) any later version.
  *
- * libhomegear-base is distributed in the hope that it will be useful,
+ * homegear-baselib-unittests is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
  * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
  * GNU Lesser General Public License for more details.
  *
  * You should have received a copy of the GNU Lesser General Public
- * License along with libhomegear-base.  If not, see
+ * License along with homegear-baselib-unittests.  If not, see
  * <http://www.gnu.org/licenses/>.
  *
  * In addition, as a special exception, the copyright holders give
@@ -27,6 +27,8 @@
  * version.  If you delete this exception statement from all source
  * files in the program, then also delete it here.
 */
+
+#include "WebSocket.h"
 
 #include <mutex>
 #include <memory>
@@ -721,127 +723,6 @@ void testBitReaderWriter()
 	std::cout << "Finished testing BitReaderWriter." << std::endl << std::endl;
 }
 
-void testWebSocket()
-{
-	std::cout << "Testing WebSocket..." << std::endl;
-
-	{ //Process header in one byte blocks
-		std::vector<char> buffer{ 0x01, 126, 0, 0 };
-
-		BaseLib::WebSocket webSocket;
-		int32_t processedBytes = webSocket.process(buffer.data(), 1);
-		if(processedBytes != 1 || webSocket.isFinished())
-		{
-			std::cerr << "Error processing first WebSocket byte." << std::endl;
-		}
-
-		processedBytes = webSocket.process(buffer.data() + 1, 1);
-		if(processedBytes != 1 || webSocket.isFinished())
-		{
-			std::cerr << "Error processing second WebSocket byte." << std::endl;
-		}
-
-		processedBytes = webSocket.process(buffer.data() + 2, 1);
-		if(processedBytes != 1 || webSocket.isFinished())
-		{
-			std::cerr << "Error processing third WebSocket byte." << std::endl;
-		}
-
-		processedBytes = webSocket.process(buffer.data() + 3, 1);
-		if(processedBytes != 1)
-		{
-			std::cerr << "Error processing forth WebSocket byte." << std::endl;
-		}
-
-		if(!webSocket.isFinished())
-		{
-			std::cerr << "Error processing WebSocket header." << std::endl;
-		}
-	}
-
-	{ //Process first two header bytes and then continue in one byte blocks
-		std::vector<char> buffer{ 0x01, 126, 0, 0 };
-
-		BaseLib::WebSocket webSocket;
-		int32_t processedBytes = webSocket.process(buffer.data(), 2);
-		if(processedBytes != 2 || webSocket.isFinished())
-		{
-			std::cerr << "Error processing first two WebSocket bytes." << std::endl;
-		}
-
-		processedBytes = webSocket.process(buffer.data() + 2, 1);
-		if(processedBytes != 1 || webSocket.isFinished())
-		{
-			std::cerr << "Error processing third WebSocket byte." << std::endl;
-		}
-
-		processedBytes = webSocket.process(buffer.data() + 3, 1);
-		if(processedBytes != 1)
-		{
-			std::cerr << "Error processing forth WebSocket byte." << std::endl;
-		}
-
-		if(!webSocket.isFinished())
-		{
-			std::cerr << "Error processing WebSocket header." << std::endl;
-		}
-	}
-
-	{ //Process first two and then the second two header bytes
-		std::vector<char> buffer{ 0x01, 126, 0, 0 };
-
-		BaseLib::WebSocket webSocket;
-		int32_t processedBytes = webSocket.process(buffer.data(), 2);
-		if(processedBytes != 2 || webSocket.isFinished())
-		{
-			std::cerr << "Error processing first two WebSocket bytes." << std::endl;
-		}
-
-		processedBytes = webSocket.process(buffer.data() + 2, 2);
-		if(processedBytes != 2)
-		{
-			std::cerr << "Error processing third and forth WebSocket byte." << std::endl;
-		}
-
-		if(!webSocket.isFinished())
-		{
-			std::cerr << "Error processing WebSocket header." << std::endl;
-		}
-	}
-
-	{ //Process whole WebSocket header
-		std::vector<char> buffer{ 0x01, 126, 0, 0 };
-
-		BaseLib::WebSocket webSocket;
-		int32_t processedBytes = webSocket.process(buffer.data(), buffer.size());
-		if(processedBytes != 4 || !webSocket.isFinished())
-		{
-			std::cerr << "Error processing WebSocket header." << std::endl;
-		}
-	}
-
-    { //Process full packet
-        //"fin" bit, "opcode" => text, "has mask" bit, header size 6, payload size 43
-        std::vector<char> buffer = _bl->hf.getBinary("81AB29845A2952A62F5A4CF678130BB63B1B1CB1681A4CE06A4B11E6691E1AE63B1B1FBD391D4ABD6C4D1EBD6E1C1CA627");
-
-        BaseLib::WebSocket webSocket;
-        int32_t processedBytes = webSocket.process(buffer.data(), buffer.size());
-        if(processedBytes != 49 || !webSocket.isFinished())
-        {
-            std::cerr << "Error processing WebSocket packet." << std::endl;
-        }
-
-        webSocket.reset(); //Reprocess same packet
-        processedBytes = webSocket.process(buffer.data(), buffer.size());
-        if(processedBytes != 49 || !webSocket.isFinished())
-        {
-            std::cerr << "Error processing WebSocket packet (2)." << std::endl;
-        }
-    }
-
-	std::cout << "Finished testing WebSocket." << std::endl << std::endl;
-}
-
 int main(int argc, char* argv[])
 {
 	_bl.reset(new BaseLib::SharedObjects(false));
@@ -850,7 +731,7 @@ int main(int argc, char* argv[])
 	testBinaryRpc();
 	testAnsiConversion();
 	testBitReaderWriter();
-	testWebSocket();
+	testWebSocket(_bl.get());
 
 	return 0;
 }

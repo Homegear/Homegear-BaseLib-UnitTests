@@ -4,6 +4,8 @@ project(homegear_baselib_unittests)
 set(CMAKE_CXX_STANDARD 11)
 
 set(SOURCE_FILES
+        src/WebSocket.cpp
+        src/WebSocket.h
         src/main.cpp)
 
 add_executable(homegear_baselib_unittests ${SOURCE_FILES})
