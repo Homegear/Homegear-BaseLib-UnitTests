@@ -28,8 +28,10 @@
  * files in the program, then also delete it here.
 */
 
+#include "HelperFunctions.h"
 #include "Json.h"
 #include "WebSocket.h"
+#include "Math.h"
 
 #include <mutex>
 #include <memory>
@@ -534,6 +536,8 @@ int main(int argc, char* argv[])
 	testAnsiConversion();
 	testBitReaderWriter();
 	testWebSocket(_bl.get());
+	testMath(_bl.get());
+	testCliCommandParsing(_bl.get());
 
 	return 0;
 }
