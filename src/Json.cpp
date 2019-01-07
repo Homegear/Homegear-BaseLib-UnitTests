@@ -47,7 +47,7 @@ void testJson(BaseLib::SharedObjects* bl)
             {
                 if(variable->structValue->size() != 18)
                 {
-                    std::cerr << "JSON decoding test failed: Struct size is not 17." << std::endl;
+                    std::cerr << "JSON decoding test failed: Struct size is not 18." << std::endl;
                 }
                 else
                 {
