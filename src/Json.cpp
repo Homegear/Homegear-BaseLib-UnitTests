@@ -226,6 +226,27 @@ void testJson(BaseLib::SharedObjects* bl)
                 std::cerr << "JSON decoding test of unicode characters failed (2)." << std::endl;
             }
         }
+
+        { //Load and decode large JSON file
+            std::string rawFlows;
+            std::string flowsFile = "data/flows.json";
+            if(!bl->io.fileExists(flowsFile)) std::cerr << "Warning: flows.json doesn't exist in \"data\"" << std::endl;
+            else rawFlows = bl->io.getFileContent(flowsFile);
+            BaseLib::HelperFunctions::trim(rawFlows);
+
+            BaseLib::Rpc::JsonDecoder jsonDecoder(bl);
+            auto flows = jsonDecoder.decode(rawFlows);
+
+            BaseLib::Rpc::JsonEncoder jsonEncoder(bl);
+            std::string rawFlows2;
+            jsonEncoder.encode(flows, rawFlows2);
+
+            if(rawFlows2 != rawFlows)
+            {
+                std::cerr << "Decoding and encoding of large JSON file (flows.json) failed." << std::endl;
+            }
+            bl->io.writeFile(flowsFile + "2.json", rawFlows2);
+        }
     }
     catch(BaseLib::Rpc::JsonDecoderException& ex)
     {
