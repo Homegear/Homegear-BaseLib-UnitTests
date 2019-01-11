@@ -44,6 +44,7 @@ void testMath(BaseLib::SharedObjects* bl)
                 std::cerr << "Error parsing number (1)." << std::endl;
             }
         }
+        
         {
             std::string numberString = "0xFFB39400FFB39400";
             auto number1 = BaseLib::Math::getUnsignedNumber64(numberString, true);

@@ -252,7 +252,6 @@ void testJson(BaseLib::SharedObjects* bl)
             {
                 std::cerr << "Decoding and encoding of large JSON file (flows.json) failed." << std::endl;
             }
-            bl->io.writeFile(flowsFile + "2.json", rawFlows2);
         }
     }
     catch(BaseLib::Rpc::JsonDecoderException& ex)
