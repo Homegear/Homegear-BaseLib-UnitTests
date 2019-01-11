@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.13)
+cmake_minimum_required(VERSION 3.10)
 project(homegear_baselib_unittests)
 
 set(CMAKE_CXX_STANDARD 11)
