@@ -225,6 +225,13 @@ void testJson(BaseLib::SharedObjects* bl)
             {
                 std::cerr << "JSON decoding test of unicode characters failed (2)." << std::endl;
             }
+
+            std::string jsonString = "z\\u00DF\\u6C34\\uD834\\uDD0B";
+            auto result = jsonDecoder.decodeString(jsonString);
+            if(result != u8"z\u00df\u6c34\U0001d10b")
+            {
+                std::cerr << "JSON decoding test of unicode characters failed (3)." << std::endl;
+            }
         }
     }
     catch(BaseLib::Rpc::JsonDecoderException& ex)

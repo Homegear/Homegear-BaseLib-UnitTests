@@ -39,9 +39,18 @@ void testMath(BaseLib::SharedObjects* bl)
             std::string numberString = "0xFFB39400";
             auto number1 = BaseLib::Math::getNumber(numberString, true);
             auto number2 = BaseLib::Math::getNumber(numberString, false);
-            if(number1 != 0xFFB39400 || number2 != 0xFFB39400)
+            if((uint32_t)number1 != 0xFFB39400 || (uint32_t)number2 != 0xFFB39400)
             {
-                std::cerr << "Error parsing number." << std::endl;
+                std::cerr << "Error parsing number (1)." << std::endl;
+            }
+        }
+        {
+            std::string numberString = "0xFFB39400FFB39400";
+            auto number1 = BaseLib::Math::getUnsignedNumber64(numberString, true);
+            auto number2 = BaseLib::Math::getUnsignedNumber64(numberString, false);
+            if((uint64_t)number1 != 0xFFB39400FFB39400ull || (uint64_t)number2 != 0xFFB39400FFB39400ull)
+            {
+                std::cerr << "Error parsing number (2)." << std::endl;
             }
         }
     }
