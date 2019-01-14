@@ -30,6 +30,27 @@
 
 #include "HelperFunctions.h"
 
+void testHelperFunctions(BaseLib::SharedObjects* bl)
+{
+    std::cout << "Testing HelperFunctions..." << std::endl;
+
+    { //getTimeUuid()
+        auto timeUuid = BaseLib::HelperFunctions::getTimeUuid();
+        auto time = BaseLib::HelperFunctions::getTimeMicroseconds();
+        if(timeUuid.size() != 53)
+        {
+            std::cerr << "Error creating time UUID (1)." << std::endl;
+        }
+        auto diff = std::abs(time - BaseLib::Math::getNumber64(timeUuid.substr(0, 16), true));
+        if(diff > 1000000)
+        {
+            std::cerr << "Error creating time UUID (2)." << std::endl;
+        }
+    }
+
+    std::cout << "Finished testing HelperFunctions." << std::endl << std::endl;
+}
+
 void testCliCommandParsing(BaseLib::SharedObjects* bl)
 {
     std::cout << "Testing CLI command parsing..." << std::endl;

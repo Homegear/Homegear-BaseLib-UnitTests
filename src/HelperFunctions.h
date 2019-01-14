@@ -33,6 +33,8 @@
 
 #include "homegear-base/BaseLib.h"
 
+void testHelperFunctions(BaseLib::SharedObjects* bl);
+
 void testCliCommandParsing(BaseLib::SharedObjects* bl);
 
 #endif

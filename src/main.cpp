@@ -537,6 +537,7 @@ int main(int argc, char* argv[])
 	testBitReaderWriter();
 	testWebSocket(_bl.get());
 	testMath(_bl.get());
+	testHelperFunctions(_bl.get());
 	testCliCommandParsing(_bl.get());
 
 	return 0;
