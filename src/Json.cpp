@@ -234,6 +234,35 @@ void testJson(BaseLib::SharedObjects* bl)
             }
         }
 
+        { //Encode ANSI and invalid Strings
+            BaseLib::Rpc::JsonEncoder jsonEncoder(bl);
+
+            std::string ansiString = "Temperature: 22.5";
+            ansiString.push_back(0xB0);
+            ansiString.push_back('C');
+            BaseLib::PVariable jsonArray = std::make_shared<BaseLib::Variable>(BaseLib::VariableType::tArray);
+            jsonArray->arrayValue->emplace_back(std::make_shared<BaseLib::Variable>(ansiString));
+            std::string result;
+            jsonEncoder.encode(jsonArray, result);
+            if(result != "[\"Temperature: 22.5\\u00B0C\"]")
+            {
+                std::cerr << "JSON encoding test of invalid characters failed (1)." << std::endl;
+            }
+
+            std::vector<char> result2;
+            jsonEncoder.encode(jsonArray, result2);
+            if(std::string(result2.begin(), result2.end()) != "[\"Temperature: 22.5\\u00B0C\"]")
+            {
+                std::cerr << "JSON encoding test of invalid characters failed (2)." << std::endl;
+            }
+
+            std::string result3 = jsonEncoder.encodeString(ansiString);
+            if(result3 != "Temperature: 22.5\\u00B0C")
+            {
+                std::cerr << "JSON encoding test of invalid characters failed (3)." << std::endl;
+            }
+        }
+
         { //Load and decode large JSON file
             std::string rawFlows;
             std::string flowsFile = "data/flows.json";
