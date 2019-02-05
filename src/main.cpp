@@ -32,6 +32,7 @@
 #include "Json.h"
 #include "WebSocket.h"
 #include "Math.h"
+#include "Http.h"
 
 #include <mutex>
 #include <memory>
@@ -539,6 +540,7 @@ int main(int argc, char* argv[])
 	testMath(_bl.get());
 	testHelperFunctions(_bl.get());
 	testCliCommandParsing(_bl.get());
+	testHttp(_bl.get());
 
 	return 0;
 }

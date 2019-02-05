@@ -6,6 +6,8 @@ set(CMAKE_CXX_STANDARD 11)
 set(SOURCE_FILES
         src/HelperFunctions.cpp
         src/HelperFunctions.h
+        src/Http.cpp
+        src/Http.h
         src/Json.cpp
         src/Json.h
         src/Math.cpp
