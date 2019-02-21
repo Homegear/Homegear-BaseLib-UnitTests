@@ -52,7 +52,7 @@ local.properties
 autom4te.cache
 *.in~
 config.log
-homegear
+homegear-baselib-unittests
 core
 vgcore.*
 
