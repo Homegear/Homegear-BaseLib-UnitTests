@@ -238,28 +238,35 @@ void testJson(BaseLib::SharedObjects* bl)
             BaseLib::Rpc::JsonEncoder jsonEncoder(bl);
 
             std::string ansiString = "Temperature: 22.5";
-            ansiString.push_back(0xB0);
+            ansiString.push_back(0xB0); //0xB0 is an invalid UTF-8 character.
             ansiString.push_back('C');
             BaseLib::PVariable jsonArray = std::make_shared<BaseLib::Variable>(BaseLib::VariableType::tArray);
             jsonArray->arrayValue->emplace_back(std::make_shared<BaseLib::Variable>(ansiString));
             std::string result;
             jsonEncoder.encode(jsonArray, result);
-            if(result != "[\"Temperature: 22.5\\u00B0C\"]")
+            if(result != R"(["Temperature: 22.5\u00B0C"])")
             {
                 std::cerr << "JSON encoding test of invalid characters failed (1)." << std::endl;
             }
 
             std::vector<char> result2;
             jsonEncoder.encode(jsonArray, result2);
-            if(std::string(result2.begin(), result2.end()) != "[\"Temperature: 22.5\\u00B0C\"]")
+            if(std::string(result2.begin(), result2.end()) != R"(["Temperature: 22.5\u00B0C"])")
             {
                 std::cerr << "JSON encoding test of invalid characters failed (2)." << std::endl;
             }
 
             std::string result3 = jsonEncoder.encodeString(ansiString);
-            if(result3 != "Temperature: 22.5\\u00B0C")
+            if(result3 != R"(Temperature: 22.5\u00B0C)")
             {
                 std::cerr << "JSON encoding test of invalid characters failed (3)." << std::endl;
+            }
+
+            ansiString = bl->hf.getBinaryString("47E4737465776F686E756E67"); //The "ä" (E4) is a valid UTF-8 start byte for a three byte sequence.
+            std::string result4 = jsonEncoder.encodeString(ansiString);
+            if(result4 != R"(G\u00E4ewohnung)")
+            {
+                std::cerr << "JSON encoding test of invalid characters failed (4)." << std::endl;
             }
         }
 

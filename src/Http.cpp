@@ -41,7 +41,7 @@ void testHttp(BaseLib::SharedObjects* bl)
 
             { //Test too small content length
                 auto processedBytes = http.process(packetWithInvalidContentLength.data(), packetWithInvalidContentLength.size());
-                if(!http.isFinished() || processedBytes != packetWithInvalidContentLength.size())
+                if(!http.isFinished() || processedBytes != (signed)packetWithInvalidContentLength.size())
                 {
                     std::cerr << "Error processing HTTP packet (1)." << std::endl;
                 }
@@ -58,7 +58,7 @@ void testHttp(BaseLib::SharedObjects* bl)
 
             auto packet2 = bl->hf.getBinary("504f5354202f20485454502f312e310d0a557365725f4167656e743a20484d2d584d4c5250432d436c69656e740d0a486f73743a2052617370692d48470d0a436f6e6e656374696f6e3a204b6565702d416c6976650d0a436f6e74656e742d547970653a20746578742f706c61696e0d0a436f6e74656e742d4c656e6774683a20350d0a0d0a546573740a");
             { //Process again without reset
-                http.process(packetWithInvalidContentLength.data(), packetWithInvalidContentLength.size());
+                http.process(packet2.data(), packet2.size());
                 std::string content(http.getContent().data(), http.getContentSize());
                 if(content != "Test\n")
                 {
