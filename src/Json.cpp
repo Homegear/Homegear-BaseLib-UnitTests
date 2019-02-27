@@ -264,9 +264,76 @@ void testJson(BaseLib::SharedObjects* bl)
 
             ansiString = bl->hf.getBinaryString("47E4737465776F686E756E67"); //The "ä" (E4) is a valid UTF-8 start byte for a three byte sequence.
             std::string result4 = jsonEncoder.encodeString(ansiString);
-            if(result4 != R"(G\u00E4ewohnung)")
+            if(result4 != R"(G\u00E4stewohnung)")
             {
                 std::cerr << "JSON encoding test of invalid characters failed (4)." << std::endl;
+            }
+        }
+
+        { //Decode large numbers
+            BaseLib::Rpc::JsonDecoder jsonDecoder(bl);
+            std::string largeNumber = R"([2147483648])";
+            std::string largeNumber2 = R"([-2147483648])";
+            std::string largeNumber3 = R"([4294967295])";
+            std::string largeNumber4 = R"([922337203685477580])";
+            std::string largeNumber5 = R"([9223372036854775807])";
+            std::string largeNumber6 = R"([9223372036854775808])";
+            std::string largeNumber7 = R"([-922337203685477580])";
+            std::string largeNumber8 = R"([18446744073709551615])";
+            std::string largeNumber9 = R"([184467440737095516159])";
+
+            auto result = jsonDecoder.decode(largeNumber);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tInteger64 || result->arrayValue->at(0)->integerValue64 != 2147483648ll)
+            {
+                std::cerr << "JSON decoding test of 64 bit integer failed." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber2);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tInteger || result->arrayValue->at(0)->integerValue != -2147483648ll)
+            {
+                std::cerr << "JSON decoding test of 32 bit negative integer failed." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber3);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tInteger64 || result->arrayValue->at(0)->integerValue64 != 4294967295ll)
+            {
+                std::cerr << "JSON decoding test of 64 bit integer failed." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber4);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tInteger64 || result->arrayValue->at(0)->integerValue64 != 922337203685477580ll)
+            {
+                std::cerr << "JSON decoding test of 64 bit integer failed." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber5);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tFloat || result->arrayValue->at(0)->floatValue != 9223372036854775807.0)
+            {
+                std::cerr << "JSON decoding test of very large integer failed (1)." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber6);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tFloat || result->arrayValue->at(0)->floatValue != 9223372036854775808.0)
+            {
+                std::cerr << "JSON decoding test of very large integer failed (2)." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber7);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tInteger64 || result->arrayValue->at(0)->integerValue64 != -922337203685477580ll)
+            {
+                std::cerr << "JSON decoding test of 64 bit negative integer failed." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber8);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tFloat || result->arrayValue->at(0)->floatValue != 18446744073709551615.0)
+            {
+                std::cerr << "JSON decoding test of very large integer failed (3)." << std::endl;
+            }
+
+            result = jsonDecoder.decode(largeNumber9);
+            if(result->arrayValue->at(0)->type != BaseLib::VariableType::tFloat || result->arrayValue->at(0)->floatValue != 184467440737095516159.0)
+            {
+                std::cerr << "JSON decoding test of very large integer failed (4)." << std::endl;
             }
         }
 
