@@ -30,6 +30,8 @@
 
 #include "HelperFunctions.h"
 
+#include <iostream>
+
 void testHelperFunctions(BaseLib::SharedObjects* bl)
 {
     std::cout << "Testing HelperFunctions..." << std::endl;

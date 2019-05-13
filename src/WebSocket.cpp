@@ -30,6 +30,8 @@
 
 #include "WebSocket.h"
 
+#include <iostream>
+
 void testWebSocket(BaseLib::SharedObjects* bl)
 {
     std::cout << "Testing WebSocket..." << std::endl;

@@ -30,6 +30,8 @@
 
 #include "Http.h"
 
+#include <iostream>
+
 void testHttp(BaseLib::SharedObjects* bl)
 {
     std::cout << "Testing HTTP parsing..." << std::endl;

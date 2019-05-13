@@ -14,7 +14,7 @@ set(SOURCE_FILES
         src/Math.h
         src/WebSocket.cpp
         src/WebSocket.h
-        src/main.cpp)
+        src/main.cpp src/BitReaderWriter.cpp src/BitReaderWriter.h)
 
 add_executable(homegear_baselib_unittests ${SOURCE_FILES})
 

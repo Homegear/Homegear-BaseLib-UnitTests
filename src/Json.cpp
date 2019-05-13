@@ -30,6 +30,9 @@
 
 #include "Json.h"
 
+#include <iostream>
+#include <iomanip>
+
 void testJson(BaseLib::SharedObjects* bl)
 {
     std::cout << "Testing JSON en-/decoding..." << std::endl;
@@ -344,10 +347,10 @@ void testJson(BaseLib::SharedObjects* bl)
             else rawFlows = bl->io.getFileContent(flowsFile);
             BaseLib::HelperFunctions::trim(rawFlows);
 
-            BaseLib::Rpc::JsonDecoder jsonDecoder(bl);
+            BaseLib::Rpc::JsonDecoder jsonDecoder;
             auto flows = jsonDecoder.decode(rawFlows);
 
-            BaseLib::Rpc::JsonEncoder jsonEncoder(bl);
+            BaseLib::Rpc::JsonEncoder jsonEncoder;
             std::string rawFlows2;
             jsonEncoder.encode(flows, rawFlows2);
 

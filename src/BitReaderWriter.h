@@ -28,38 +28,11 @@
  * files in the program, then also delete it here.
 */
 
-#include "Math.h"
+#ifndef HOMEGEAR_BASELIB_UNITTESTS_BITREADERWRITER_H
+#define HOMEGEAR_BASELIB_UNITTESTS_BITREADERWRITER_H
 
-#include <iostream>
+#include <homegear-base/BaseLib.h>
 
-void testMath(BaseLib::SharedObjects* bl)
-{
-    std::cout << "Testing Math..." << std::endl;
-    try
-    {
-        {
-            std::string numberString = "0xFFB39400";
-            auto number1 = BaseLib::Math::getNumber(numberString, true);
-            auto number2 = BaseLib::Math::getNumber(numberString, false);
-            if((uint32_t)number1 != 0xFFB39400 || (uint32_t)number2 != 0xFFB39400)
-            {
-                std::cerr << "Error parsing number (1)." << std::endl;
-            }
-        }
+void testBitReaderWriter(BaseLib::SharedObjects* bl);
 
-        {
-            std::string numberString = "0xFFB39400FFB39400";
-            auto number1 = BaseLib::Math::getUnsignedNumber64(numberString, true);
-            auto number2 = BaseLib::Math::getUnsignedNumber64(numberString, false);
-            if((uint64_t)number1 != 0xFFB39400FFB39400ull || (uint64_t)number2 != 0xFFB39400FFB39400ull)
-            {
-                std::cerr << "Error parsing number (2)." << std::endl;
-            }
-        }
-    }
-    catch(BaseLib::Rpc::JsonDecoderException& ex)
-    {
-        std::cerr << "Error: " << ex.what() << std::endl;
-    }
-    std::cout << "Finished testing Math." << std::endl << std::endl;
-}
+#endif //HOMEGEAR_BASELIB_UNITTESTS_BITREADERWRITER_H
