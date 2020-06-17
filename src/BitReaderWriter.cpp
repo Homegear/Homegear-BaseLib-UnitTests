@@ -138,6 +138,7 @@ void testBitReaderWriter(BaseLib::SharedObjects* bl)
         }
     }
 
+    //{{{ Test setPositionLE with uint8_t target prefilled with 1s
     for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
     {
         for(uint32_t j = 0; i + j <= 64; j++) // j represents length
@@ -154,14 +155,16 @@ void testBitReaderWriter(BaseLib::SharedObjects* bl)
             std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56), (uint8_t)(resultData >> 48), (uint8_t)(resultData >> 40), (uint8_t)(resultData >> 32), (uint8_t)(resultData >> 24), (uint8_t)(resultData >> 16), (uint8_t)(resultData >> 8), (uint8_t)resultData };
 
             std::vector<uint8_t> targetData(8, 0xFF);
-            BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+            BaseLib::BitReaderWriter::setPositionLE(i, j, targetData, data);
             if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
             {
                 std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
             }
         }
     }
+    //}}}
 
+    //{{{ Test setPositionLE with uint8_t target prefilled with 0s
     for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
     {
         for(uint32_t j = 0; i + j <= 64; j++) // j represents length
@@ -174,14 +177,16 @@ void testBitReaderWriter(BaseLib::SharedObjects* bl)
             std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56), (uint8_t)(resultData >> 48), (uint8_t)(resultData >> 40), (uint8_t)(resultData >> 32), (uint8_t)(resultData >> 24), (uint8_t)(resultData >> 16), (uint8_t)(resultData >> 8), (uint8_t)resultData };
 
             std::vector<uint8_t> targetData(8, 0);
-            BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+            BaseLib::BitReaderWriter::setPositionLE(i, j, targetData, data);
             if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
             {
                 std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
             }
         }
     }
+    //}}}
 
+    //{{{ Test setPositionLE with char target prefilled with 1s
     for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
     {
         for(uint32_t j = 0; i + j <= 64; j++) // j represents length
@@ -198,14 +203,16 @@ void testBitReaderWriter(BaseLib::SharedObjects* bl)
             std::vector<char> expectedData{ (char)(uint8_t)(resultData >> 56), (char)(uint8_t)(resultData >> 48), (char)(uint8_t)(resultData >> 40), (char)(uint8_t)(resultData >> 32), (char)(uint8_t)(resultData >> 24), (char)(uint8_t)(resultData >> 16), (char)(uint8_t)(resultData >> 8), (char)(uint8_t)resultData };
 
             std::vector<char> targetData(8, (char)(uint8_t)0xFF);
-            BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+            BaseLib::BitReaderWriter::setPositionLE(i, j, targetData, data);
             if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
             {
                 std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
             }
         }
     }
+    //}}}
 
+    //{{{ Test setPositionLE with char target prefilled with 0s
     for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
     {
         for(uint32_t j = 0; i + j <= 64; j++) // j represents length
@@ -218,19 +225,110 @@ void testBitReaderWriter(BaseLib::SharedObjects* bl)
             std::vector<char> expectedData{ (char)(uint8_t)(resultData >> 56), (char)(uint8_t)(resultData >> 48), (char)(uint8_t)(resultData >> 40), (char)(uint8_t)(resultData >> 32), (char)(uint8_t)(resultData >> 24), (char)(uint8_t)(resultData >> 16), (char)(uint8_t)(resultData >> 8), (char)(uint8_t)resultData };
 
             std::vector<char> targetData(8, 0);
-            BaseLib::BitReaderWriter::setPosition(i, j, targetData, data);
+            BaseLib::BitReaderWriter::setPositionLE(i, j, targetData, data);
             if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
             {
                 std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
             }
         }
     }
+    //}}}
 
-    uint64_t resultData = 0xAABBCCDDEEFF3355ull;
-    std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56), (uint8_t)(resultData >> 48), (uint8_t)(resultData >> 40), (uint8_t)(resultData >> 32), (uint8_t)(resultData >> 24), (uint8_t)(resultData >> 16), (uint8_t)(resultData >> 8), (uint8_t)resultData };
-    std::vector<char> targetData(8, 0);
-    BaseLib::BitReaderWriter::setPosition(0, 64, targetData, expectedData);
-    std::cout << BaseLib::HelperFunctions::getHexString(targetData) << std::endl;
+    //{{{ Test setPositionBE with uint8_t target prefilled with 1s
+    for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+    {
+        for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+        {
+            uint64_t resultData = intData << (64 - j) >> i;
+            for(uint32_t k = 0; k < i; k++)
+            {
+                resultData |= (uint64_t)1 << (64 - k - 1);
+            }
+            for(uint32_t k = i + j; k < 64; k++)
+            {
+                resultData |= (uint64_t)1 << (64 - k - 1);
+            }
+            std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56u), (uint8_t)(resultData >> 48u), (uint8_t)(resultData >> 40u), (uint8_t)(resultData >> 32u), (uint8_t)(resultData >> 24u), (uint8_t)(resultData >> 16u), (uint8_t)(resultData >> 8u), (uint8_t)resultData };
+
+            std::vector<uint8_t> targetData(8, 0xFF);
+            BaseLib::BitReaderWriter::setPositionBE(i, j, targetData, data);
+            if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+            {
+                std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+            }
+        }
+    }
+    //}}}
+
+    //{{{ Test setPositionBE with uint8_t target prefilled with 0s
+    for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+    {
+        for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+        {
+            uint64_t resultData = intData << (64 - j) >> i;
+            for(uint32_t k = i + j; k < 64; k++)
+            {
+                resultData &= ~((uint64_t)1 << (64 - k - 1));
+            }
+            std::vector<uint8_t> expectedData{ (uint8_t)(resultData >> 56), (uint8_t)(resultData >> 48), (uint8_t)(resultData >> 40), (uint8_t)(resultData >> 32), (uint8_t)(resultData >> 24), (uint8_t)(resultData >> 16), (uint8_t)(resultData >> 8), (uint8_t)resultData };
+
+            std::vector<uint8_t> targetData(8, 0);
+            BaseLib::BitReaderWriter::setPositionBE(i, j, targetData, data);
+            if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+            {
+                std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+            }
+        }
+    }
+    //}}}
+
+    //{{{ Test setPositionBE with char target prefilled with 1s
+    for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+    {
+        for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+        {
+            uint64_t resultData = intData << (64 - j) >> i;
+            for(uint32_t k = 0; k < i; k++)
+            {
+                resultData |= (uint64_t)1 << (64 - k - 1);
+            }
+            for(uint32_t k = i + j; k < 64; k++)
+            {
+                resultData |= (uint64_t)1 << (64 - k - 1);
+            }
+            std::vector<char> expectedData{ (char)(uint8_t)(resultData >> 56), (char)(uint8_t)(resultData >> 48), (char)(uint8_t)(resultData >> 40), (char)(uint8_t)(resultData >> 32), (char)(uint8_t)(resultData >> 24), (char)(uint8_t)(resultData >> 16), (char)(uint8_t)(resultData >> 8), (char)(uint8_t)resultData };
+
+            std::vector<char> targetData(8, (char)(uint8_t)0xFF);
+            BaseLib::BitReaderWriter::setPositionBE(i, j, targetData, data);
+            if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+            {
+                std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+            }
+        }
+    }
+    //}}}
+
+    //{{{ Test setPositionBE with char target prefilled with 0s
+    for(uint32_t i = 0; i < data.size() * 8; i++) // i is start position
+    {
+        for(uint32_t j = 0; i + j <= 64; j++) // j represents length
+        {
+            uint64_t resultData = intData << (64 - j) >> i;
+            for(uint32_t k = i + j; k < 64; k++)
+            {
+                resultData &= ~((uint64_t)1 << (64 - k - 1));
+            }
+            std::vector<char> expectedData{ (char)(uint8_t)(resultData >> 56), (char)(uint8_t)(resultData >> 48), (char)(uint8_t)(resultData >> 40), (char)(uint8_t)(resultData >> 32), (char)(uint8_t)(resultData >> 24), (char)(uint8_t)(resultData >> 16), (char)(uint8_t)(resultData >> 8), (char)(uint8_t)resultData };
+
+            std::vector<char> targetData(8, 0);
+            BaseLib::BitReaderWriter::setPositionBE(i, j, targetData, data);
+            if(expectedData.size() != targetData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+            {
+                std::cerr << "Error writing " << j << " bits to index " << i << ": Got " << BaseLib::HelperFunctions::getHexString(targetData) << " but expected " << BaseLib::HelperFunctions::getHexString(expectedData) << std::endl;
+            }
+        }
+    }
+    //}}}
 
     std::cout << "Finished testing BitReaderWriter." << std::endl << std::endl;
 }
