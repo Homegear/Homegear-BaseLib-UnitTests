@@ -330,5 +330,31 @@ void testBitReaderWriter(BaseLib::SharedObjects* bl)
     }
     //}}}
 
+    //{{{ Test setPositionBE with uint8_t target prefilled with 0s and source smaller than copied size.
+    {
+        std::vector<uint8_t> smallData{0xAB};
+        std::vector<uint8_t> targetData(8, 0);
+        std::vector<uint8_t> expectedData{0, 0, 0, 0, 0xAB, 0, 0, 0};
+        BaseLib::BitReaderWriter::setPositionBE(8, 32, targetData, smallData);
+        if(targetData.size() != expectedData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+        {
+            std::cerr << "Error writing 32 bits to index 8 with source array smaller than 32 bits." << std::endl;
+        }
+    }
+    //}}}
+
+    //{{{ Test setPositionBE with char target prefilled with 0s and source smaller than copied size.
+    {
+        std::vector<uint8_t> smallData{0xAB};
+        std::vector<char> targetData(8, 0);
+        std::vector<char> expectedData{0, 0, 0, 0, (char)(uint8_t)0xAB, 0, 0, 0};
+        BaseLib::BitReaderWriter::setPositionBE(8, 32, targetData, smallData);
+        if(targetData.size() != expectedData.size() || !std::equal(targetData.begin(), targetData.end(), expectedData.begin()))
+        {
+            std::cerr << "Error writing 32 bits to index 8 with source array smaller than 32 bits." << std::endl;
+        }
+    }
+    //}}}
+
     std::cout << "Finished testing BitReaderWriter." << std::endl << std::endl;
 }
